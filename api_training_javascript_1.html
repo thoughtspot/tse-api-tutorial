@@ -1,0 +1,95 @@
+<html>
+    <head>
+        <script>
+            /*
+            * JavaScript can go in any of the multiple script tags you create, and they can be in the head or body section
+            */
+            
+            console.log("Start of our script block");
+
+            // Variables and consts declared out here are considered in the "global scope", can be used in other functions
+            const tsHost = 'https://yourinstance.thoughtspot.cloud';
+            const tsApiVersion = '2.0';
+            const baseUrl = `${tsHost}/api/rest/${tsApiVersion}/`;  // Forward ticks allow variables in strings
+
+            const endpoint = "metadata/search"
+            const apiFullEndpoint = baseUrl + endpoint;
+            
+            // Copy this directly from the REST API Playground, substituting in any variables you need
+            const apiRequestObject = {
+                "metadata": [
+                    {
+                        "name_pattern": "%QA%",
+                        "type": "LIVEBOARD"
+                    },
+                    {
+                        "name_pattern": "%QA%",
+                        "type": "ANSWER"
+                    }
+                    ],
+                'record_offset': 0,
+                'record_size': 100000 
+            }
+
+            console.log("Executing fetch");
+            /* 
+             * Fetch is asynchronous and returns a Promise, which always has a .then() and .catch() method so you can chain
+             * additional code to happen after the REST API call returns back.
+             * Alternatively, you can use the 'async' and 'await' patterns
+             * https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous/Promises
+             */
+             fetch(
+                apiFullEndpoint,
+                {
+                    method: 'POST',
+                    headers: {
+                        "Accept": "application/json",
+                        "X-Requested-By": "ThoughtSpot",
+                        "Content-Type": "application/json"
+                        },
+                    credentials: "include",
+                    body: JSON.stringify(apiRequestObject)
+
+                }
+            ).then(response =>
+            {
+                console.log("Fetch response returned with status code " + response.status);
+                // Parse 4XX or 500 HTTP status code errors from the API 
+                if (!response.ok) {
+                    console.log("HTTP response indicates an error from the API");
+                    throw new Error("Received HTTP response " + response.status + "with the message " + response.statusText)
+
+                    //
+                    // Alternatively, check for specific error codes you might expect, like a 403
+                    /*
+                    if( response.status == 403){
+                        // retrySSOProcess(); // Example action to take based on status 
+                    }
+                    else{
+                            throw new Error("Received HTTP response " + response.status + "with the message " + response.statusText)
+                    }
+                    */
+                }
+                else {
+                    if( response.status === 200){
+                        return response.json(); // Returns the JSON of the response 
+                    }
+                    else if (response.status === 204){
+                        return true;  // 204 is success without any body
+                    }
+
+                }
+            }).catch(error =>
+            {
+                console.error("Unable to get the" + endpoint + "response: " + error);
+            });
+
+
+        </script>
+    </head>
+    <body>
+        <!-- This is where the HTML elements go in the page -->
+        <h1>JavaScript tester</h2>
+        <div id="outputLocation"></div>
+    </body>
+</html>
