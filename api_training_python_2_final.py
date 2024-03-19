@@ -121,9 +121,10 @@ for lb in lbs_to_find_sql:
         lb_id = sql_resp['metadata_id']
         lb_name = sql_resp['metadata_name']
 
+         # Display the information about the Liveboard before iterating through the visualizations for their details    
         print("Liveboard:\n{}\n{}\n".format(lb_id, lb_name))
-
         print("---- ")
+        
         # Liveboards have visualizations each with their own query
         for sql_query in sql_resp['sql_queries']:
             
