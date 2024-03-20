@@ -12,7 +12,7 @@ org_id = 1613534286
 ts: TSRestApiV2 = TSRestApiV2(server_url=server)
 # Try to request token from /auth/token/full and then use token to be the bearer_token of the TSRestApiV2 obj
 try:
-
+    pass
 except requests.exceptions.HTTPError as e:
     print("Error from the API: ")
     print(e)
@@ -35,10 +35,10 @@ lbs_to_find_sql =[]
 
 try:
     # Send request to /metadata/search endpoint
-    
+    pass
     # Iterate through the results from the API response to double-check that the name value matches exactly
     for item in answers_resp:
-
+        pass
       # Add the whole object if it matches to the answers_to_find_sql list
         
     # print("Found the following Answers to request from:")
@@ -54,10 +54,10 @@ except requests.exceptions.HTTPError as e:
 # Repeat steps above, but for the Liveboards response
 try:
     # Send request to /metadata/search endpoint
-
+    pass
     # Iterate through the results from the API response to double-check that the name value matches exactly
     for item in lbs_resp:
-
+        pass
         # Add the whole object to the lbs_to_find_sql list
 
     # print("Found the following Liveboards to request from:")

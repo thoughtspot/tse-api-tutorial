@@ -1,7 +1,8 @@
 import requests
 import json
 
-thoughtspot_url = 'https://yourinstance.thoughtspot.cloud')
+thoughtspot_url = 'https://yourinstance.thoughtspot.cloud'
+org_id = 1613534286
 api_version = '2.0'
 base_url = '{thoughtspot_url}/api/rest/{version}/'.format(thoughtspot_url=thoughtspot_url, version=api_version)
 # Add additional headers for specific request if necessary
@@ -23,7 +24,7 @@ json_post_data = {
   "username": "yourusername",
   "password": "y0urP@ssword",
   "validity_time_in_sec": 3600,
-  "org_id": 0,
+  "org_id": org_id,
   "auto_create": False  # make sure to uppercase in Python
 }
 

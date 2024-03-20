@@ -1,7 +1,8 @@
 import requests
 import json
 
-thoughtspot_url = 'https://yourinstance.thoughtspot.cloud'
+thoughtspot_url = 'https://training.thoughtspot.cloud'
+org_id = 1613534286
 api_version = '2.0'
 base_url = '{thoughtspot_url}/api/rest/{version}/'.format(thoughtspot_url=thoughtspot_url, version=api_version)
 api_headers = {
@@ -14,12 +15,16 @@ requests_session = requests.Session()
 requests_session.headers.update(api_headers)
 
 # url is base_url + endpoint
-endpoint = ""
+endpoint = "auth/token/full"
 url = base_url + endpoint
 
 # JSON request as Python Dict
 json_post_data = {
-    # Any arguments necessary
+  "username": "user251",
+  "validity_time_in_sec": 3000,
+  "org_id": org_id,
+  "auto_create": False,
+  "password": "Embedding2024!"
 }
 
 try:
@@ -41,3 +46,4 @@ except requests.exceptions.HTTPError as e:
     print(e.request.body)
     print(e.response.content)
 
+print(resp_json["token"])
