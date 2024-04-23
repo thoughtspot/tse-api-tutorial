@@ -1,7 +1,7 @@
 import requests
 import json
 
-thoughtspot_url = 'https://training.thoughtspot.cloud'
+thoughtspot_url = 'https://{}.thoughtspot.cloud'
 org_id = 1613534286
 api_version = '2.0'
 base_url = '{thoughtspot_url}/api/rest/{version}/'.format(thoughtspot_url=thoughtspot_url, version=api_version)
@@ -15,16 +15,11 @@ requests_session = requests.Session()
 requests_session.headers.update(api_headers)
 
 # url is base_url + endpoint
-endpoint = "auth/token/full"
+endpoint = ""
 url = base_url + endpoint
 
 # JSON request as Python Dict
 json_post_data = {
-  "username": "user251",
-  "validity_time_in_sec": 3000,
-  "org_id": org_id,
-  "auto_create": False,
-  "password": "Embedding2024!"
 }
 
 try:
