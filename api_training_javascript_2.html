@@ -1,6 +1,15 @@
 <html>
     <head>
-        <script>
+        <script type = 'module'>
+            import {
+                LiveboardEmbed,
+                AuthType,
+                init,
+                prefetch,
+                tokenizedFetch
+            }
+        from 'https://cdn.jsdelivr.net/npm/@thoughtspot/visual-embed-sdk/dist/tsembed.es.js';
+        
             /*
             * JavaScript can go in any of the multiple script tags you create, and they can be in the head or body section
             */
@@ -40,7 +49,7 @@
                 }
                 
                 // With the async modifier on the function, you add return await to the fetch() call here
-                return await fetch(
+                return await tokenizedFetch(
                     apiFullEndpoint,
                     fetchArgs
                 ).then(response =>
