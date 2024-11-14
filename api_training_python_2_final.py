@@ -3,7 +3,7 @@ import requests
 
 from thoughtspot_rest_api_v1 import *
 
-username = '{}}'
+username = '{}'
 password = '{}'
 server = 'https://{}.thoughtspot.cloud'
 org_id = 1613534286
@@ -21,64 +21,95 @@ except requests.exceptions.HTTPError as e:
     print("Exiting script after error...")
     exit()
 
+# 1. Find all Liveboards and Answers with a name that includes '(Sample)'
+
+# Get all of the items with name '(Sample)'
+#  Is this a case-sensitive or insensitive operation? Are we finding anywhere in the name or just at start or end?
+
 # Create request to /metadata/search to find the Liveboards and Answers matching the name pattern
 # Use the Playground to build your request, then copy/paste in the script
-search_answers_request = {
+search_request = {
     "metadata": [
     {
-      "name_pattern": "%QA%",
+      "name_pattern": "(Sample)",
       "type": "ANSWER"
-    }
-  ],
-    'record_offset': 0,
-    'record_size': 100000
-}
-
-search_liveboards_request = {
- "metadata": [
+    },
     {
-      "name_pattern": "%QA%",
+      "name_pattern": "Sample)",
       "type": "LIVEBOARD"
     }
   ],
     'record_offset': 0,
-    'record_size': 100000
+    'record_size': 10000
 }
 
-# Create Lists to hold the final set of Answers + Liveboards we want to request SQL from (this isn't required)
-answers_to_find_sql = []
-lbs_to_find_sql =[]
-
 try:
     # Send request to /metadata/search endpoint
-    answers_resp = ts.metadata_search(request=search_answers_request)
-    # Iterate through the results from the API response to double-check that the name value matches exactly
-    for item in answers_resp:
-        m_name = item["metadata_name"]
-        m_id = item["metadata_id"]
-        if m_name.find("QA ") != -1:
-            answers_to_find_sql.append(item)  # We'll add the whole object to the new list
-    # print("Found the following Answers to request from:")
-    # print(json.dumps(answers_to_find_sql, indent=2))
+    metadata_resp = ts.metadata_search(request=search_request)
 except requests.exceptions.HTTPError as e:
     print("Error from the API: ")
     print(e)
     print(e.response.content)
     exit()
 
+# Create List to hold the final set of Answers + Liveboards we want to tag and share,
+final_list_of_objs =[]
 
-# Repeat steps above, but for the Liveboards response
+# Iterate through the results from the API response to double-check that the name value matches exactly
+for item in metadata_resp:
+    m_name = item["metadata_name"]
+    m_id = item["metadata_id"]
+    # Python string find is Case-Sensitive 
+    if m_name.find("(Sample)") != -1:
+        final_list_of_objs.append(item)  # We'll add the whole object to the new List
+
+# 2. Add a tag to each item called 'Tutorial Test'
+
+# Get the ID of the tag called 'Tutorial Test'
+#   What if there is no tag called 'Tutorial Test'?
+
+
+#
+# Find the Tag Identifer so we can assign
+# Create new Tag if it doesn't exist
+#
 try:
-    # Send request to /metadata/search endpoint
-    lbs_resp = ts.metadata_search(request=search_liveboards_request)
-    # Iterate through the results from the API response to double-check that the name value matches exactly
-    for item in lbs_resp:
-        m_name = item["metadata_name"]
-        m_id = item["metadata_id"]
-        if m_name.find("QA ") != -1:
-            lbs_to_find_sql.append(item)  # We'll add the whole object to the new list
-    # print("Found the following Liveboards to request from:")
-    # print(json.dumps(lbs_to_find_sql, indent=2))
+    tags = ts.tags_search(tag_identifier="Tutorial Test")
+except requests.exceptions.HTTPError as e:
+    print("Error from the API: ")
+    print(e)
+    print(e.response.content)
+    exit()
+
+if len(tags) == 0:
+    try:
+        new_tag = ts.tags_create(name="Tutorial Test")
+        tag_id = new_tag['id']
+    except requests.exceptions.HTTPError as e:
+        print("Error from the API: ")
+        print(e)
+        print(e.response.content)
+        exit()
+else:
+    tag_id = tags[0]['id']
+
+# Assign the tag to the items
+
+try:
+   # When we copied from the Playground, we realize the format of the `metadata` section is an Array of Objects,
+   # which needs to be a List of Dicts in Python syntax [ {"identifier": metadata_id}, ...]
+   
+   tag_metadata_section = []
+   # Iterate through each object and make the Dict in create format
+   for obj in final_list_of_objs:
+        tag_metadata_section.append({"identifier" : obj['metadata_id']})
+
+   assign_req = {
+        "metadata": tag_metadata_section,
+        "tag_identifiers": [tag_id]
+   }
+
+   assign_resp = ts.tags_assign(requst=assign_req)
 except requests.exceptions.HTTPError as e:
     print("Error from the API: ")
     print(e)
@@ -86,60 +117,77 @@ except requests.exceptions.HTTPError as e:
     exit()
 
 #
-# Retrieve and Display all of the SQL queries
-# Here you might make decisions about what to show, format of display
+# Extra credit assigment below:
 #
 
-for answer in answers_to_find_sql:
+# 3. Give read-only access to a 'Tutorial Test' group
+
+# 3.1 Get the ID of the group called 'Tutorial Test'
+#  Is 'Tutorial Test' the name or the display_name property?
+#  What if there is no group called 'Tutorial Test'?
+try:
+    # Copy from Playground
+    groups_req = {
+        "record_offset": 0,
+        "record_size": 10,
+        "group_identifier": "Tutorial Test"
+    }
+    groups = ts.groups_search(request=groups_req)
+except requests.exceptions.HTTPError as e:
+    print("Error from the API: ")
+    print(e)
+    print(e.response.content)
+    exit()
+
+#
+# Find the Group Identifer so we can share
+# Create new Group if it doesn't exist
+#
+if len(groups) == 0:
     try:
-        # metadata_answer_sql doesn't have generic request, it lets you pass in answer_identifier directly
-        sql_resp = ts.metadata_answer_sql(answer_identifier=answer['metadata_id'])
-
-        # Print out the sql_resp structure to inspect for the details you want to retrieve
-        # print(json.dumps(sql_resp, indent=2))
-
-        # Answers only will ever have one sql_query 
-        sql_query = sql_resp['sql_queries'][0]['sql_query']
-        answer_id = sql_resp['metadata_id']
-        answer_name = sql_resp['metadata_name']
-        # Display the information about the Answer and then the query
-        print("Answer:\n{}\n{}\n".format(answer_id, answer_name))
-        print(sql_query)
-        print("---- \n")
+        group_create_req = {
+            "name": "Tutorial Test",
+            "display_name": "Tutorial Test",
+            "type": "LOCAL_GROUP",
+            "visibility": "NON_SHARABLE"
+        }
+        new_group = ts.groups_create(request=group_create_req)
+        group_id = new_group['id']
     except requests.exceptions.HTTPError as e:
         print("Error from the API: ")
         print(e)
         print(e.response.content)
-        exit() 
+        exit()
+else:
+    group_id = groups[0]['id']
 
-# Retrieve the SQL of each Liveboard
-for lb in lbs_to_find_sql:
-    try:
-        # metadata_liveboard_sql doesn't have generic request, it lets you pass in liveboard_identifier directly
-        sql_resp = ts.metadata_liveboard_sql(liveboard_identifier=lb['metadata_id'])
+# 3.2 Share content as READ-ONLY to the group
 
-        lb_id = sql_resp['metadata_id']
-        lb_name = sql_resp['metadata_name']
+#
+final_metadata_ids = []
+for obj in final_list_of_objs:
+    final_metadata_ids.append(obj['metadata_id'])
 
-         # Display the information about the Liveboard before iterating through the visualizations for their details    
-        print("Liveboard:\n{}\n{}\n".format(lb_id, lb_name))
-        print("---- ")
-        
-        # Liveboards have visualizations each with their own query
-        for sql_query in sql_resp['sql_queries']:
-            
-            viz_id = sql_query['metadata_id']
-            viz_name = sql_query['metadata_name']
-            query = sql_query['sql_query']
+try:    
+    share_req = {
+        "permissions": [
+            {
+            "principal": {
+                "identifier": group_id
+            },
+            "share_mode": "READ_ONLY"
+            }
+        ],
+        "message": "N/A",
+        "enable_custom_url": False,
+        "notify_on_share":False,
+        "has_lenient_discoverability": False,
+        "metadata_identifiers": final_metadata_ids
+    }
+    share_resp = ts.security_metadata_share(request=share_req)
 
-            print("Viz:\n{}\n{}\n".format(viz_id, viz_name))
-            print(query)
-            print("---- ")
-        print("")
-
-    except requests.exceptions.HTTPError as e:
-        print("Error from the API: ")
-        print(e)
-        print(e.response.content)
-        print(e.request.body)
-        exit() 
+except requests.exceptions.HTTPError as e:
+    print("Error from the API: ")
+    print(e)
+    print(e.response.content)
+    exit()
