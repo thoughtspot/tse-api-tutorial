@@ -1,7 +1,7 @@
 import json
 import requests
 
-from thoughtspot_rest_api_v1 import *
+from thoughtspot_rest_api import *
 
 username = '{}}'
 password = '{}'
